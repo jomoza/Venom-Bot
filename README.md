@@ -1,6 +1,7 @@
 # MSFVenom-Discord-Bot
 Simple Discord bot to craft metasploit payloads.
 
+![alt text](https://i.ibb.co/NxD7mDs/we.gif "Venom Discord Bot")
 
 The Bot works by executing msfvenom with the parameters that you give the bot. Then he will send you the payload file and leave a record in the log file
 
