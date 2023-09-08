@@ -1,70 +1,83 @@
 #!/usr/bin/python3
-from discord import Game, Intents, File
+
 from discord.ext.commands import Bot
 from modules import msfcraft
 from modules import menu
+from modules import check
 
+import discord
 import logging
 import os
-import re
 
-# Constants
 BOT_PREFIX = ('!')
-TOKEN = ''  # ENTER YOUR TOKEN
-DEBUG_LOG = 'logs/MSFVenomBOT_DEBUG.log'
-ERROR_LOG = 'logs/MSFVenomBOT_ERROR.log'
+TOKEN: str = ''  # ENTER YOUR TOKEN
 
-intents = Intents.default().all()
-client = Bot(command_prefix=BOT_PREFIX, intents=intents)
+intents = discord.Intents.default()
+client: Bot = Bot(command_prefix=BOT_PREFIX, intents=intents)
 
-logging.basicConfig(filemode='a',
+logging.basicConfig(filename='logs/MSFVenomBOT.log',
+                    filemode='a',
                     format='%(asctime)s:%(levelname)s:%(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S%p',
                     level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 @client.command(name='create',
                 description='msfvenom discord bot.',
                 brief='[] Create a metasploit payload.',
                 aliases=['createpayload', 'msfvenom', 'createmsf'],
                 pass_context=True)
-async def create(context, plat, ip, port):
+async def create(context, plat: str, ip: str, port: str) -> None:
+    """
+    Create a Metasploit payload based on user input.
+
+    :param context: The context of the command invocation.
+    :param plat: The target platform for the payload.
+    :param ip: The IP address to be used in the payload.
+    :param port: The port number to be used in the payload.
+    """
     try:
-        if re.match(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}', ip) == None:
-            logger.error(f"User: {context.message.author.mention} enter invalid IP.")
-            await context.send("Invalid IP")
-        if re.match(r'(windows|sh|linux|macos|web)', plat) == None:
-            logger.error(f"User: {context.message.author.mention} enter invalid plateform.")
-            await context.send("Invalid plateform")
-        logger.info(f"{context.message.author.mention} wants to create a {plat} payload for {ip}.", DEBUG_LOG)
-        msfC = msfcraft.msfCrafting(plat, ip, port)
-        logger.debug(f"Payload crafting for user {context.message.author.mention}.", DEBUG_LOG)
-        msfC.run()
-        os.system(msfC.getPayloadCmd())
-        logger.debug(f"Payload for {context.message.author.mention} with {plat} and {ip} was created.", DEBUG_LOG)
-        await context.send(file=File(msfC.getPayloadFile()))
-        logger.debug(f"{msfC.getPayloadFile()} was send to {context.message.author.mention}.", DEBUG_LOG)
+        entry = check.EntryCheck(context, plat, ip, port)
+        if await entry.checkAll():
+            logging.info(f"{context.message.author.name} wants to create a {plat} payload for {ip}.")
+            msfC = msfcraft.msfCrafting(plat, ip, port)
+            logging.debug(f"Payload crafting for user {context.message.author.name}.")
+            msfC.run()
+            os.system(msfC.getPayloadCmd())
+            logging.info(f"Payload for {context.message.author.name} with {plat} and {ip} was created.")
+            await context.send(file=discord.File(msfC.getPayloadFile()))
+            logging.info(f"{msfC.getPayloadFile()} was sent to {context.message.author.name}.")
+
     except Exception as e:
-        logger.error(f" Error: {e} for user: {context.message.author.mention}.", ERROR_LOG)
+        logging.error(f" Error: {e} for user: {context.message.author.name}.")
 
 @client.command(name='helpme',
                 description='a better help message than this.',
                 brief='[] Shows detailed help.',
                 aliases=['hh', 'helpmeplease', 'wtfisthisshit'],
                 pass_context=True)
-async def helpme(context):
+async def helpme(context) -> None:
+    """
+    Display a detailed help menu.
+
+    :param context: The context of the command invocation.
+    """
     try:
-        advHelp = menu.botMenus()
-        await context.send(advHelp.getMenu())
+        advHelp = menu.BotMenu()
+        await context.send(embed=advHelp.getMenu())
+
     except Exception as e:
-        logger.error(f" Error: {e} for user: {context.message.author.mention}.", ERROR_LOG)
+        logging.error(f" Error: {e} for user: {context.message.author.name}.")
 
 @client.event
-async def on_ready():
-    await client.change_presence(activity=Game(name='malware crafting'))
-    logger.debug(f"Server {client.user.name} is running.", DEBUG_LOG)
+async def on_ready() -> None:
+    """
+    Event handler when the bot is ready.
+    """
+    await client.change_presence(activity=discord.Game(name='malware crafting'))
+    logging.debug(f"Server {client.user.name} is running.")
 
 try:
     client.run(TOKEN)
+
 except Exception as e:
-    logger.error(f"{e}.", ERROR_LOG)
+    logging.error(f"{e}.")

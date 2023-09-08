@@ -24,6 +24,6 @@ https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-
 3.- Make "!help" or "!helpme" in Discord chat to know how to use the bot
 
 ```
-!create <platform> <ip_server_addres> <remote_port>
+!create <platform> <LHOST> <LPORT>
 Platform options: windows, sh, linux, macox, web
 ```
