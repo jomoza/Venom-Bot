@@ -3,13 +3,15 @@ Simple Discord bot to craft metasploit payloads.
 
 ![alt text](https://i.ibb.co/NxD7mDs/we.gif "Venom Discord Bot")
 
-The Bot works by executing msfvenom with the parameters that you give the bot. Then he will send you the payload file and leave a record in the log file
+The Bot works by executing msfvenom with the parameters that you give the bot. Then he will send you the payload file.
 
-## Requeriments
+## Requirements
 
-[+] Metasploit https://www.metasploit.com/get-started
+[+] msfvenom https://www.metasploit.com/get-started
 
 [+] discord.py https://discordpy.readthedocs.io/en/latest/api.html
+
+[+] Python requirements: `pip3 install -r requirements.txt`
 
 ## How to use
 
@@ -17,12 +19,11 @@ The Bot works by executing msfvenom with the parameters that you give the bot. T
 
 https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token
 
-2.- Run it
+2.- Run **bot.py** with `python3 bot.py`
 
 3.- Make "!help" or "!helpme" in Discord chat to know how to use the bot
 
-
 ```
-[*] $create <platform> <ip_server_addres> <remote_port>
+!create <platform> <ip_server_addres> <remote_port>
 Platform options: windows, sh, linux, macox, web
 ```
